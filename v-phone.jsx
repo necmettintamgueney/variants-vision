@@ -178,16 +178,10 @@ function ScreenImagined() {
 
       {/* Flavor dimension (images) - unique flavors only */}
       <div style={{ marginTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span className="eyebrow">Flavor · {p.style}</span>
-          <DCTag tone="green" style={{ fontSize: 9.5, padding: "2px 7px" }}>{uniqueFlavors.length} flavors</DCTag>
-        </div>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Flavor · {p.style}</div>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
           {uniqueFlavors.map((x) => {
             const on = p.flavor === x.flavor;
-            // Check if this flavor has multiple sizes
-            const sizesForFlavor = d.products.filter((prod) => prod.style === p.style && prod.flavor === x.flavor);
-            const hasMultipleSizes = sizesForFlavor.length > 1;
             return (
               <button key={x.flavor} onClick={() => pickFlavor(x.flavor)} style={{
                 flexShrink: 0, width: 70, border: on ? "2px solid var(--dh-red)" : "1.5px solid var(--border)",
@@ -200,11 +194,6 @@ function ScreenImagined() {
                   {x.flavor}
                 </div>
                 {x.isNew && <span style={{ position: "absolute", top: -6, right: -6, fontSize: 8, fontWeight: 700, color: "#fff", background: "var(--green-2)", borderRadius: 99, padding: "1px 5px", boxShadow: "var(--shadow-1)" }}>NEW</span>}
-                {hasMultipleSizes && !x.isNew && (
-                  <span style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", fontSize: 8, fontWeight: 600, color: "var(--ink-faint)", background: "var(--surface-2)", borderRadius: 99, padding: "1px 5px", whiteSpace: "nowrap" }}>
-                    {sizesForFlavor.length} sizes
-                  </span>
-                )}
               </button>
             );
           })}
@@ -213,11 +202,8 @@ function ScreenImagined() {
 
       {/* Size dimension - only show if multiple sizes available */}
       {availableSizes.length > 1 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <span className="eyebrow">Size · {p.flavor}</span>
-            <DCTag tone="ink" mono style={{ fontSize: 9.5, padding: "2px 7px" }}>{availableSizes.length} sizes</DCTag>
-          </div>
+        <div style={{ marginTop: 16 }}>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>Size · {p.flavor}</div>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             {availableSizes.map((sz) => {
               const on = p.size === sz;
