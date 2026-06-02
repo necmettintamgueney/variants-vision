@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variants Vision — From attributes to meaning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Surfaces */
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-2: #F4F4EF;
+    --surface-3: #ECECE5;
+
+    /* Ink */
+    --ink: #1B1F2A;
+    --ink-soft: #4A5260;
+    --ink-mute: #6B7280;
+    --ink-faint: #9BA0AB;
+
+    /* Borders */
+    --border: #E4E4DD;
+    --border-strong: #CFCFC6;
+
+    /* Brand */
+    --dh-red: #D61F26;
+    --red-tint: #FCE8E9;
+    --red-edge: #F2C9CB;
+
+    /* Green */
+    --green: #00A86B;
+    --green-2: #008C58;
+    --green-tint: #E4F6EC;
+    --green-edge: #BFE5CF;
+
+    /* Amber */
+    --amber: #C8870D;
+    --amber-tint: #FBF0D6;
+    --amber-edge: #ECCF93;
+
+    /* Blue */
+    --blue: #0066B3;
+    --blue-2: #004F8C;
+    --blue-tint: #E1EEF7;
+    --blue-edge: #B7D6EC;
+
+    /* Purple */
+    --purple: #7B3FA0;
+    --purple-2: #693589;
+    --purple-tint: #F1E7F8;
+    --purple-edge: #DEC7EC;
+
+    /* Type */
+    --font: "Outfit", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 22px;
+
+    /* Shadows */
+    --shadow-1: 0 1px 2px rgba(20,22,30,0.04), 0 1px 1px rgba(20,22,30,0.03);
+    --shadow-2: 0 4px 14px -6px rgba(20,22,30,0.10), 0 2px 4px rgba(20,22,30,0.04);
+    --shadow-3: 0 12px 32px -12px rgba(20,22,30,0.16);
+    --shadow-4: 0 28px 64px -24px rgba(20,22,30,0.28);
+
+    /* Accent (tweakable) */
+    --accent: var(--dh-red);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--red-tint); color: var(--dh-red); }
+
+  .eyebrow {
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .mono {
+    font-family: var(--mono);
+    font-feature-settings: "calt", "liga";
+  }
+
+  /* Reduce reliance on whitespace; helpers */
+  /* Transform-only rise: content is always opaque (never hidden if the
+     animation clock is frozen/throttled), the entrance is a subtle lift. */
+  .fade-up { animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+
+  @keyframes fadeUp {
+    from { transform: translateY(16px); }
+    to   { transform: translateY(0); }
+  }
+
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50%      { transform: scale(1.32); opacity: 1; }
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(0, -5px); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes dashFlow {
+    to { stroke-dashoffset: -24; }
+  }
+
+  @keyframes ringSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, .fade-up { animation: none !important; opacity: 1 !important; transform: none !important; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* Progress bar */
+  .progress-track {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: transparent; z-index: 120;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    width: 0%; transition: width 120ms linear;
+    box-shadow: 0 0 12px -2px var(--accent);
+  }
+
+  /* Side rail */
+  .rail {
+    position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 14px; z-index: 110;
+  }
+  .rail a {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--ink-faint);
+    transition: color 200ms ease;
+  }
+  .rail a .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--border-strong);
+    transition: all 260ms cubic-bezier(0.22,1,0.36,1);
+    flex-shrink: 0;
+  }
+  .rail a .rail-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    opacity: 0; transform: translateX(-6px);
+    transition: all 220ms ease; white-space: nowrap;
+    color: var(--ink-soft);
+  }
+  .rail a:hover .rail-label { opacity: 1; transform: translateX(0); }
+  .rail a:hover .dot { background: var(--ink-mute); }
+  .rail a.active .dot {
+    background: var(--accent); transform: scale(1.45);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .rail a.active .rail-label { opacity: 1; transform: translateX(0); color: var(--ink); }
+  @media (max-width: 1220px) { .rail { display: none; } }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong); border-radius: 99px;
+    border: 3px solid var(--bg);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+  /* Network connection flow */
+  .flow-path { stroke-dasharray: 5 7; animation: dashFlow 1.6s linear infinite; }
+
+  #root { position: relative; z-index: 1; }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.4; mix-blend-mode: multiply;
+    background-image: radial-gradient(circle at 1px 1px, rgba(27,31,42,0.04) 1px, transparent 0);
+    background-size: 4px 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="image-slot.js"></script>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="v-data.jsx"></script>
+  <script type="text/babel" src="v-brand.jsx"></script>
+  <script type="text/babel" src="v-network.jsx"></script>
+  <script type="text/babel" src="v-phone.jsx"></script>
+  <script type="text/babel" src="v-shell.jsx"></script>
+  <script type="text/babel" src="v-scenes.jsx"></script>
+  <script type="text/babel" src="v-app.jsx"></script>
+</body>
+</html>
