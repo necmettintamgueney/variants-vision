@@ -101,9 +101,18 @@ function ScreenImagined() {
   const stylesList = d.dims.style;
   const inStyle = d.products.filter((x) => x.style === p.style);
 
+  // Find all sizes available for the current style + flavor combo
+  const sameFlavorInStyle = d.products.filter((x) => x.style === p.style && x.flavor === p.flavor);
+  const availableSizes = sameFlavorInStyle.map((x) => x.size);
+
   const pickStyle = (st) => {
     const first = d.products.find((x) => x.style === st);
     if (first) setSel(first.id);
+  };
+
+  const pickSize = (sz) => {
+    const match = d.products.find((x) => x.style === p.style && x.flavor === p.flavor && x.size === sz);
+    if (match) setSel(match.id);
   };
 
   return (
@@ -165,6 +174,33 @@ function ScreenImagined() {
                 </div>
                 <div style={{ fontSize: 9.5, fontWeight: 600, marginTop: 5, color: on ? "var(--dh-red)" : "var(--ink-soft)", lineHeight: 1.1, textAlign: "left" }}>{x.flavor}</div>
                 {x.isNew && <span style={{ position: "absolute", top: -6, right: -6, fontSize: 8, fontWeight: 700, color: "#fff", background: "var(--green-2)", borderRadius: 99, padding: "1px 5px", boxShadow: "var(--shadow-1)" }}>NEW</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Size dimension */}
+      <div style={{ marginTop: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <span className="eyebrow">Size · {p.flavor}</span>
+          <DCTag tone="ink" mono style={{ fontSize: 9.5, padding: "2px 7px" }}>{availableSizes.length} size{availableSizes.length > 1 ? "s" : ""}</DCTag>
+        </div>
+        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+          {availableSizes.map((sz) => {
+            const on = p.size === sz;
+            const szProduct = sameFlavorInStyle.find((x) => x.size === sz);
+            return (
+              <button key={sz} onClick={() => pickSize(sz)} style={{
+                display: "inline-flex", alignItems: "center", gap: 4, padding: "7px 12px", borderRadius: 10, cursor: "pointer",
+                border: on ? "1.5px solid var(--ink)" : "1.5px solid var(--border)",
+                background: on ? "var(--ink)" : "var(--surface)", color: on ? "#fff" : "var(--ink-soft)",
+                fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12, transition: "all 160ms ease",
+              }}>
+                {sz}
+                {szProduct && szProduct.price !== p.price && !on && (
+                  <span style={{ fontSize: 10, color: "var(--ink-faint)", marginLeft: 2 }}>{d.unit}{szProduct.price}</span>
+                )}
               </button>
             );
           })}

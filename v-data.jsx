@@ -20,9 +20,24 @@ const LAYS = {
       attrs: [{ t: "Gluten free", tone: "green" }, { t: "No artificial flavors", tone: "green" }],
     },
     {
+      id: "classic-small", name: "Classic", style: "Classic", flavor: "Original",
+      size: "150 g", price: "1.90", img: "images/classic.png", cut: "Original cut",
+      attrs: [{ t: "Gluten free", tone: "green" }, { t: "No artificial flavors", tone: "green" }],
+    },
+    {
+      id: "classic-large", name: "Classic", style: "Classic", flavor: "Original",
+      size: "185 g", price: "2.60", img: "images/classic.png", cut: "Original cut",
+      attrs: [{ t: "Gluten free", tone: "green" }, { t: "No artificial flavors", tone: "green" }, { t: "Big bag", tone: "ink" }],
+    },
+    {
       id: "salted", name: "Salted", style: "Classic", flavor: "Salted",
       size: "150 g", price: "2.20", img: "images/salted.png", cut: "Original cut",
       attrs: [{ t: "Sea salt", tone: "blue" }],
+    },
+    {
+      id: "salted-large", name: "Salted", style: "Classic", flavor: "Salted",
+      size: "185 g", price: "2.60", img: "images/salted.png", cut: "Original cut",
+      attrs: [{ t: "Sea salt", tone: "blue" }, { t: "Big bag", tone: "ink" }],
     },
     {
       id: "saltvinegar", name: "Salt & Vinegar", style: "Classic", flavor: "Salt & Vinegar",
@@ -32,6 +47,11 @@ const LAYS = {
     {
       id: "baked", name: "Baked — Original", style: "Baked", flavor: "Original",
       size: "177 g", price: "2.60", img: "images/baked.png", cut: "Baked, not fried",
+      attrs: [{ t: "50% less fat", tone: "green", img: true }, { t: "Made with olive oil", tone: "green", img: true }],
+    },
+    {
+      id: "baked-small", name: "Baked — Original", style: "Baked", flavor: "Original",
+      size: "150 g", price: "2.20", img: "images/baked.png", cut: "Baked, not fried",
       attrs: [{ t: "50% less fat", tone: "green", img: true }, { t: "Made with olive oil", tone: "green", img: true }],
     },
     {
