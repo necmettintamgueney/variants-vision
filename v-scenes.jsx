@@ -279,6 +279,15 @@ function SceneStaticDynamic() {
             </div>
           </div>
         </div>
+        {/* Confidence threshold note */}
+        <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 10, border: "1px dashed var(--border)" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-mute)", marginBottom: 6 }}>Confidence thresholds (to be calibrated)</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 11.5, color: "var(--ink-soft)" }}>
+            <span><b style={{ color: "var(--ink)" }}>Node creation:</b> ≥85% confidence to create a node</span>
+            <span><b style={{ color: "var(--ink)" }}>Group membership:</b> ≥90% shared core nodes</span>
+            <span><b style={{ color: "var(--ink)" }}>Dimension promotion:</b> ≥70% occurrence across group</span>
+          </div>
+        </div>
       </DCCard>
     </Scene>
   );
@@ -347,12 +356,12 @@ function SceneBonus() {
 
 /* ============ 8 · OPEN QUESTIONS ============ */
 const QUESTIONS = [
-  { t: "Annotation flip", b: "How do we shift from labeling to train models → labeling to build nodes? Same work, different output." },
-  { t: "Core vs granular boundary", b: "Which attributes are predefined anchors, and which are left for the model to learn?" },
-  { t: "Confidence & thresholds", b: "How strong must a shared-node connection be before two products are grouped?" },
-  { t: "Conflict resolution", b: "Text says one thing, the image says another. What is the tie-breaking rule?" },
-  { t: "PIM architecture", b: "How does PIM accept dynamic dimensions? How do downstream apps consume them without breaking?" },
-  { t: "Reliability & retries", b: "Idempotent reprocessing, robust retries — what does production-grade look like?" },
+  { t: "Confidence thresholds", b: "What confidence level defines a 'shared node'? If brand is 94% confident but flavor is 67%, does the product join the group? We need thresholds for node creation, group membership, and dimension promotion." },
+  { t: "Core vs emergent boundary", b: "Brand, category, product_type are clearly core. But what about base_ingredient? Sugar_level? Who curates this list, and what's the promotion path from emergent → core?" },
+  { t: "PIM integration", b: "PIM expects fixed variant dimensions per product_type. How do we inject dynamic dimensions? Option A: virtual layer on top. Option B: schema migration. Each has trade-offs for downstream consumers." },
+  { t: "Fallback strategy", b: "When the model can't place a product (low confidence across all nodes), what happens? Un-grouped bucket? Manual review queue? Fallback to current attribute-based rules?" },
+  { t: "Conflict resolution", b: "Text says 'Classic', image shows 'Baked'. Which wins? We need deterministic rules per attribute type — and audit logs for debugging." },
+  { t: "Evaluation framework", b: "How do we measure success? Coverage (% products grouped), accuracy (% correct groupings vs human judgment), operational load (time saved, escalations reduced). Define baselines before the spike." },
 ];
 function SceneQuestions() {
   const ref = useRefSc(null);
@@ -378,9 +387,9 @@ function SceneQuestions() {
 
 /* ============ CLOSING · NEXT STEPS ============ */
 const PHASES = [
-  { n: "01", t: "Prove the signal", b: "Offline study on one sample category: can shared-node grouping beat the current attribute baseline on coverage and accuracy?", tone: "red" },
-  { n: "02", t: "Pipeline & PIM redesign", b: "A retry-safe classification service. PIM must accept dynamic dimensions. Downstream apps need to consume flexible structures.", tone: "purple" },
-  { n: "03", t: "Universal rollout", b: "One flow for new and existing products; the graph becomes the source of truth for variant relationships.", tone: "green" },
+  { n: "01", t: "Spike: prove the signal", b: "Pick one high-volume category (e.g., chips, beverages). Run offline comparison: shared-node grouping vs current attribute baseline. Measure: coverage gain, accuracy vs human-labeled gold set, edge cases found. Timebox: 2–3 sprints.", tone: "red" },
+  { n: "02", t: "Design: pipeline & PIM integration", b: "Design retry-safe classification service. Decide PIM approach: virtual layer or schema migration. Define downstream contracts. Document fallback rules and conflict resolution logic.", tone: "purple" },
+  { n: "03", t: "Build: pilot category rollout", b: "Implement for one category end-to-end. A/B test against current flow. Monitor: grouping latency, manual escalations, downstream breakage. Iterate before expanding.", tone: "green" },
 ];
 function Closing() {
   const ref = useRefSc(null);
@@ -396,7 +405,7 @@ function Closing() {
           A three-phase path, starting small.
         </h2>
         <p style={{ fontSize: 19, lineHeight: 1.55, color: "var(--ink-soft)", maxWidth: 680, margin: "0 0 40px" }}>
-          We don&rsquo;t need to commit the catalogue to prove the idea. We need one category and one honest comparison.
+          We don&rsquo;t need to commit the catalogue to prove the idea. We need one category, a labeled gold set, and an honest comparison against the current baseline.
         </p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16, marginBottom: 20 }}>
@@ -410,7 +419,7 @@ function Closing() {
       </div>
 
       {/* Architecture note */}
-      <DCCard padded className={inView ? "fade-up" : ""} style={{ animationDelay: "180ms", opacity: inView ? undefined : 1, marginBottom: 24, background: "var(--amber-tint)", borderColor: "var(--amber-edge)" }}>
+      <DCCard padded className={inView ? "fade-up" : ""} style={{ animationDelay: "180ms", opacity: inView ? undefined : 1, marginBottom: 20, background: "var(--amber-tint)", borderColor: "var(--amber-edge)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
           <SparkIcon size={18} color="var(--amber)" />
           <div>
@@ -418,6 +427,28 @@ function Closing() {
             <div style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6 }}>
               The graph makes groups dynamic — but PIM and downstream apps (talabat, etc.) expect fixed structures. <b style={{ color: "var(--ink)" }}>PIM needs to accept dynamic dimensions</b> and <b style={{ color: "var(--ink)" }}>downstream apps need to consume them without breaking</b>. This is the key conversation for engineering.
             </div>
+          </div>
+        </div>
+      </DCCard>
+
+      {/* Success metrics */}
+      <DCCard padded className={inView ? "fade-up" : ""} style={{ animationDelay: "240ms", opacity: inView ? undefined : 1, marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 99, background: "var(--green-2)" }} />
+          <div style={{ fontSize: 15, fontWeight: 700 }}>Success metrics for the spike</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
+          <div>
+            <div className="mono" style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 4 }}>Coverage</div>
+            <div style={{ fontSize: 13.5, color: "var(--ink-soft)" }}><b style={{ color: "var(--ink)" }}>% products grouped</b> — baseline vs graph-based. Target: lift in long-tail categories where attribute extraction is thin.</div>
+          </div>
+          <div>
+            <div className="mono" style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 4 }}>Accuracy</div>
+            <div style={{ fontSize: 13.5, color: "var(--ink-soft)" }}><b style={{ color: "var(--ink)" }}>% correct groupings</b> vs human-labeled gold set. Target: ≥95% on clear cases; flag edge cases for review.</div>
+          </div>
+          <div>
+            <div className="mono" style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 4 }}>Operational load</div>
+            <div style={{ fontSize: 13.5, color: "var(--ink-soft)" }}><b style={{ color: "var(--ink)" }}>Time saved, escalations reduced</b>. Fewer manual group fixes, faster time-to-shelf for new products.</div>
           </div>
         </div>
       </DCCard>
