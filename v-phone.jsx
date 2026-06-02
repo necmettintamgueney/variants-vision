@@ -99,7 +99,17 @@ function ScreenImagined() {
   const [sel, setSel] = useStateP("classic");
   const p = layById(sel);
   const stylesList = d.dims.style;
+
+  // Get unique flavors within the current style (one entry per flavor, use first size as representative)
   const inStyle = d.products.filter((x) => x.style === p.style);
+  const uniqueFlavors = [];
+  const seenFlavors = new Set();
+  inStyle.forEach((x) => {
+    if (!seenFlavors.has(x.flavor)) {
+      seenFlavors.add(x.flavor);
+      uniqueFlavors.push(x);
+    }
+  });
 
   // Find all sizes available for the current style + flavor combo
   const sameFlavorInStyle = d.products.filter((x) => x.style === p.style && x.flavor === p.flavor);
@@ -108,6 +118,17 @@ function ScreenImagined() {
   const pickStyle = (st) => {
     const first = d.products.find((x) => x.style === st);
     if (first) setSel(first.id);
+  };
+
+  const pickFlavor = (flavor) => {
+    // When picking a flavor, try to keep the same size if available, otherwise pick first
+    const currentSize = p.size;
+    const sameSize = d.products.find((x) => x.style === p.style && x.flavor === flavor && x.size === currentSize);
+    if (sameSize) setSel(sameSize.id);
+    else {
+      const first = d.products.find((x) => x.style === p.style && x.flavor === flavor);
+      if (first) setSel(first.id);
+    }
   };
 
   const pickSize = (sz) => {
@@ -155,57 +176,69 @@ function ScreenImagined() {
         </div>
       </div>
 
-      {/* Flavor dimension (images) */}
+      {/* Flavor dimension (images) - unique flavors only */}
       <div style={{ marginTop: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <span className="eyebrow">Flavor · {p.style}</span>
-          <DCTag tone="green" style={{ fontSize: 9.5, padding: "2px 7px" }}>{inStyle.length} in this style</DCTag>
+          <DCTag tone="green" style={{ fontSize: 9.5, padding: "2px 7px" }}>{uniqueFlavors.length} flavors</DCTag>
         </div>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
-          {inStyle.map((x) => {
-            const on = x.id === sel;
+          {uniqueFlavors.map((x) => {
+            const on = p.flavor === x.flavor;
+            // Check if this flavor has multiple sizes
+            const sizesForFlavor = d.products.filter((prod) => prod.style === p.style && prod.flavor === x.flavor);
+            const hasMultipleSizes = sizesForFlavor.length > 1;
             return (
-              <button key={x.id} onClick={() => setSel(x.id)} style={{
+              <button key={x.flavor} onClick={() => pickFlavor(x.flavor)} style={{
                 flexShrink: 0, width: 70, border: on ? "2px solid var(--dh-red)" : "1.5px solid var(--border)",
                 borderRadius: 12, padding: 5, background: "var(--surface)", cursor: "pointer", position: "relative", transition: "all 160ms ease",
               }}>
                 <div style={{ height: 50, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", padding: 3 }}>
                   <img src={x.img} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 </div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, marginTop: 5, color: on ? "var(--dh-red)" : "var(--ink-soft)", lineHeight: 1.1, textAlign: "left" }}>{x.flavor}</div>
+                <div style={{ fontSize: 9.5, fontWeight: 600, marginTop: 5, color: on ? "var(--dh-red)" : "var(--ink-soft)", lineHeight: 1.1, textAlign: "left" }}>
+                  {x.flavor}
+                </div>
                 {x.isNew && <span style={{ position: "absolute", top: -6, right: -6, fontSize: 8, fontWeight: 700, color: "#fff", background: "var(--green-2)", borderRadius: 99, padding: "1px 5px", boxShadow: "var(--shadow-1)" }}>NEW</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Size dimension */}
-      <div style={{ marginTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span className="eyebrow">Size · {p.flavor}</span>
-          <DCTag tone="ink" mono style={{ fontSize: 9.5, padding: "2px 7px" }}>{availableSizes.length} size{availableSizes.length > 1 ? "s" : ""}</DCTag>
-        </div>
-        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-          {availableSizes.map((sz) => {
-            const on = p.size === sz;
-            const szProduct = sameFlavorInStyle.find((x) => x.size === sz);
-            return (
-              <button key={sz} onClick={() => pickSize(sz)} style={{
-                display: "inline-flex", alignItems: "center", gap: 4, padding: "7px 12px", borderRadius: 10, cursor: "pointer",
-                border: on ? "1.5px solid var(--ink)" : "1.5px solid var(--border)",
-                background: on ? "var(--ink)" : "var(--surface)", color: on ? "#fff" : "var(--ink-soft)",
-                fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12, transition: "all 160ms ease",
-              }}>
-                {sz}
-                {szProduct && szProduct.price !== p.price && !on && (
-                  <span style={{ fontSize: 10, color: "var(--ink-faint)", marginLeft: 2 }}>{d.unit}{szProduct.price}</span>
+                {hasMultipleSizes && !x.isNew && (
+                  <span style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", fontSize: 8, fontWeight: 600, color: "var(--ink-faint)", background: "var(--surface-2)", borderRadius: 99, padding: "1px 5px", whiteSpace: "nowrap" }}>
+                    {sizesForFlavor.length} sizes
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Size dimension - only show if multiple sizes available */}
+      {availableSizes.length > 1 && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span className="eyebrow">Size · {p.flavor}</span>
+            <DCTag tone="ink" mono style={{ fontSize: 9.5, padding: "2px 7px" }}>{availableSizes.length} sizes</DCTag>
+          </div>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            {availableSizes.map((sz) => {
+              const on = p.size === sz;
+              const szProduct = sameFlavorInStyle.find((x) => x.size === sz);
+              return (
+                <button key={sz} onClick={() => pickSize(sz)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 4, padding: "7px 12px", borderRadius: 10, cursor: "pointer",
+                  border: on ? "1.5px solid var(--ink)" : "1.5px solid var(--border)",
+                  background: on ? "var(--ink)" : "var(--surface)", color: on ? "#fff" : "var(--ink-soft)",
+                  fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12, transition: "all 160ms ease",
+                }}>
+                  {sz}
+                  {szProduct && szProduct.price !== p.price && !on && (
+                    <span style={{ fontSize: 10, color: "var(--ink-faint)", marginLeft: 2 }}>{d.unit}{szProduct.price}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* attributes from image */}
       <div style={{ marginTop: 15 }}>
