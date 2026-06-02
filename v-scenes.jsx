@@ -59,11 +59,11 @@ function Hero() {
 
 /* ============ 1 · PROBLEMS ============ */
 const PROBLEMS = [
-  { t: "Attribute dependency", b: "A product can't join a group until its variant attributes are extracted. Dataforge coverage sits under 100%, and niche attributes are unreliable." },
+  { t: "Annotation bottleneck", b: "Dataforge needs annotated datasets to train extraction models. Getting thousands of products labeled is slow and expensive. Niche attributes stay inaccurate because training data is thin." },
+  { t: "Attribute dependency", b: "A product can't join a group until its variant attributes are extracted. Coverage sits under 100%, and the pipeline blocks on data we don't fully have." },
   { t: "Static schema", b: "Each product type carries a fixed set of variant dimensions. Anything outside that set is invisible to grouping." },
-  { t: "PIM rigidity", b: "Adding a new dimension means deleting and recreating the entire variant group. Expensive, manual, and error-prone." },
-  { t: "Operational load", b: "Attribute QA, manual mapping, and rework scale linearly with the catalogue — every new market multiplies it." },
-  { t: "Limited scalability", b: "New categories and long-tail products rarely fit a predefined template, so they fall out of grouping entirely." },
+  { t: "PIM constraints", b: "All products in a group must share the same brand_id, master_category, and product_type. Adding a new dimension means deleting and recreating the entire group." },
+  { t: "Downstream lock-in", b: "PIM pushes fixed variant structures to downstream apps. Any schema change ripples to talabat and other consumers — coordination overhead slows everything." },
 ];
 function SceneProblems() {
   const ref = useRefSc(null);
@@ -72,7 +72,7 @@ function SceneProblems() {
     <Scene sceneRef={ref} id="problems" num={1} total={TOTAL} kicker="The problem" eyebrowTone="red"
       title="The current approach hits a wall."
       lede="Today, grouping is attribute-first: a product type defines which variant dimensions exist, and a product can only be grouped once those exact attributes are extracted. Five things break."
-      message="Grouping is gated on data we don't fully have — so coverage stays capped, no matter how much we tune extraction.">
+      message="We're blocked on data we don't fully have — annotation is expensive, PIM is rigid, and downstream apps expect fixed structures.">
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {PROBLEMS.map((p, i) => (
           <ProblemCard key={i} num={i + 1} title={p.t} body={p.b} tone="red" inView={inView} delay={i * 70} />
@@ -84,7 +84,9 @@ function SceneProblems() {
 
 /* ============ 2 · CORE SHIFT ============ */
 const SHIFT_ROWS = [
+  { dim: "Why we label", old: "Annotate to train prediction models", neu: "Label to build graph nodes" },
   { dim: "Grouping basis", old: "Predefined attributes per product type", neu: "Shared meaning across products" },
+  { dim: "Group guardrail", old: "External rules (brand_id, category)", neu: "Confident nodes define boundaries" },
   { dim: "New dimension", old: "Delete & recreate the variant group", neu: "Auto-added the moment it's discovered" },
   { dim: "Coverage", old: "Blocked until attributes are extracted", neu: "Every product participates from day one" },
   { dim: "Images", old: "Not used for grouping at all", neu: "Always-on signal that strengthens detection" },
@@ -200,15 +202,23 @@ function SceneDisplay({ example = "chips", motion = "subtle" }) {
 
 /* ============ 5 · STATIC vs DYNAMIC ============ */
 function SceneStaticDynamic() {
+  const ref = useRefSc(null);
+  const inView = useInView(ref, { threshold: 0.1 });
   const stable = ["Brand", "Category", "Product type", "Base ingredient"];
   const emergent = ["Flavor", "Pack size", "Protein type", "Sugar level", "Scent", "Color", "…and whatever the data shows next"];
+  const currentConstraints = [
+    { rule: "Same brand_id", desc: "All products must share the brand assignment" },
+    { rule: "Same master_category", desc: "All products must be in the same category" },
+    { rule: "Same product_type", desc: "All products must match the product type" },
+    { rule: "Same variant attributes", desc: "All products must share the predefined variant dimensions" },
+  ];
   return (
-    <Scene id="static-dynamic" num={5} total={TOTAL} kicker="The hybrid model" eyebrowTone="blue"
+    <Scene sceneRef={ref} id="static-dynamic" num={5} total={TOTAL} kicker="The hybrid model" eyebrowTone="blue"
       title="What stays fixed, and what is allowed to emerge."
       lede="We don't throw away structure — we shrink it. A small, predefined core keeps groups stable and predictable. Everything else is free to be discovered."
       messageTone="blue"
       message="A hybrid: predefined core for stability, self-learning dimensions for reach. Best of both, instead of either-or.">
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 18, marginBottom: 20 }}>
         <DCCard accent="var(--ink-mute)" hover>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <span style={{ width: 11, height: 11, borderRadius: 3, background: "var(--ink)" }} />
@@ -232,6 +242,44 @@ function SceneStaticDynamic() {
           </div>
         </DCCard>
       </div>
+
+      {/* New section: Graph as guardrail */}
+      <DCCard padded style={{ background: "var(--blue-tint)", borderColor: "var(--blue-edge)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <SparkIcon size={16} color="var(--blue-2)" />
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--blue-2)" }}>The graph becomes the guardrail</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
+          <div>
+            <div className="eyebrow" style={{ color: "var(--ink-mute)", marginBottom: 8 }}>Current: External rules enforce groups</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {currentConstraints.map((c, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "var(--ink-soft)" }}>
+                  <XBig size={12} color="var(--ink-faint)" />
+                  <span><b style={{ color: "var(--ink)" }}>{c.rule}</b> — {c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="eyebrow" style={{ color: "var(--green-2)", marginBottom: 8 }}>Proposed: Confident nodes define boundaries</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "var(--ink-soft)" }}>
+                <CheckBig size={12} color="var(--green-2)" />
+                <span>If the system is confident that <b style={{ color: "var(--ink)" }}>"Lays" is the brand node</b>, that confidence <b style={{ color: "var(--green-2)" }}>defines</b> the group boundary.</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "var(--ink-soft)" }}>
+                <CheckBig size={12} color="var(--green-2)" />
+                <span>We don't need to enforce brand_id and master_category as external constraints — they're already in the graph.</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "var(--ink-soft)" }}>
+                <CheckBig size={12} color="var(--green-2)" />
+                <span>Products join based on shared confident nodes, not predefined rules.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DCCard>
     </Scene>
   );
 }
@@ -299,12 +347,12 @@ function SceneBonus() {
 
 /* ============ 8 · OPEN QUESTIONS ============ */
 const QUESTIONS = [
+  { t: "Annotation flip", b: "How do we shift from labeling to train models → labeling to build nodes? Same work, different output." },
   { t: "Core vs granular boundary", b: "Which attributes are predefined anchors, and which are left for the model to learn?" },
   { t: "Confidence & thresholds", b: "How strong must a shared-node connection be before two products are grouped?" },
   { t: "Conflict resolution", b: "Text says one thing, the image says another. What is the tie-breaking rule?" },
-  { t: "PIM representation", b: "How do emergent dimensions persist so downstream apps can consume them cleanly?" },
+  { t: "PIM architecture", b: "How does PIM accept dynamic dimensions? How do downstream apps consume them without breaking?" },
   { t: "Reliability & retries", b: "Idempotent reprocessing, robust retries — what does production-grade look like?" },
-  { t: "Multi-dimensional analytics", b: "Hierarchy plus min / max / avg / median per dimension — how do we model it?" },
 ];
 function SceneQuestions() {
   const ref = useRefSc(null);
@@ -331,8 +379,8 @@ function SceneQuestions() {
 /* ============ CLOSING · NEXT STEPS ============ */
 const PHASES = [
   { n: "01", t: "Prove the signal", b: "Offline study on one sample category: can shared-node grouping beat the current attribute baseline on coverage and accuracy?", tone: "red" },
-  { n: "02", t: "Pipeline & PIM", b: "A retry-safe classification service, a way to represent emergent dimensions in PIM, and multi-dimensional analytics.", tone: "purple" },
-  { n: "03", t: "Universal rollout", b: "One flow for new and existing products; downstream apps consume variant groups directly.", tone: "green" },
+  { n: "02", t: "Pipeline & PIM redesign", b: "A retry-safe classification service. PIM must accept dynamic dimensions. Downstream apps need to consume flexible structures.", tone: "purple" },
+  { n: "03", t: "Universal rollout", b: "One flow for new and existing products; the graph becomes the source of truth for variant relationships.", tone: "green" },
 ];
 function Closing() {
   const ref = useRefSc(null);
@@ -351,7 +399,7 @@ function Closing() {
           We don&rsquo;t need to commit the catalogue to prove the idea. We need one category and one honest comparison.
         </p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16, marginBottom: 44 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16, marginBottom: 20 }}>
         {PHASES.map((p, i) => (
           <DCCard key={i} accent={toneColor(p.tone)} hover className={inView ? "fade-up" : ""} style={{ animationDelay: `${i * 90}ms`, opacity: inView ? undefined : 1 }}>
             <div className="mono" style={{ fontSize: 13, color: toneColor(p.tone), fontWeight: 600, marginBottom: 10 }}>PHASE {p.n}</div>
@@ -360,6 +408,20 @@ function Closing() {
           </DCCard>
         ))}
       </div>
+
+      {/* Architecture note */}
+      <DCCard padded className={inView ? "fade-up" : ""} style={{ animationDelay: "180ms", opacity: inView ? undefined : 1, marginBottom: 24, background: "var(--amber-tint)", borderColor: "var(--amber-edge)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <SparkIcon size={18} color="var(--amber)" />
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--amber)", marginBottom: 8 }}>This is an architecture redesign, not just a pipeline change</div>
+            <div style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+              The graph makes groups dynamic — but PIM and downstream apps (talabat, etc.) expect fixed structures. <b style={{ color: "var(--ink)" }}>PIM needs to accept dynamic dimensions</b> and <b style={{ color: "var(--ink)" }}>downstream apps need to consume them without breaking</b>. This is the key conversation for engineering.
+            </div>
+          </div>
+        </div>
+      </DCCard>
+
       <DCCard className={inView ? "fade-up" : ""} style={{ animationDelay: "300ms", opacity: inView ? undefined : 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", borderTop: "3px solid var(--accent)" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.015em" }}>Let&rsquo;s pressure-test the feasibility together.</div>
